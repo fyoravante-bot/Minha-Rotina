@@ -1,0 +1,1760 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minha Rotina</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root{
+  --bg:#f4f6fb;--panel:#fff;--ink:#182230;--muted:#6b7280;
+  --line:#e7ebf1;--blue:#315efb;--nav:#17243a;
+  --green:#16865b;--red:#c44545
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px Inter,system-ui,Arial,sans-serif;line-height:1.6}
+button,.btn{cursor:pointer;font:inherit}
+input,select,textarea{font:inherit;border:1px solid #dce2ea;border-radius:8px;padding:10px;background:white;color:var(--ink);width:100%}
+textarea{min-height:78px;resize:vertical}
+label{display:grid;gap:7px;font-size:15px;color:#3f4b5d;font-weight:550}
+.hidden{display:none!important}
+
+/* LOGIN */
+.auth-screen{
+  min-height:100vh;display:flex;align-items:center;
+  justify-content:center;padding:35px;
+  background:linear-gradient(135deg,#eef2fa,#f7f9fd)
+}
+.auth-layout{
+  width:min(1080px,100%);min-height:620px;
+  display:grid;grid-template-columns:1fr 1fr;
+  background:white;border-radius:24px;overflow:hidden;
+  box-shadow:0 20px 65px #17243a18;border:1px solid #e6eaf1
+}
+.auth-brand{
+  background:linear-gradient(145deg,#172c52,#315efb);
+  color:white;padding:55px 48px;display:flex;
+  flex-direction:column;justify-content:center;
+  position:relative;overflow:hidden
+}
+.auth-brand:before{
+  content:"";position:absolute;width:360px;height:360px;
+  border:1px solid #ffffff25;border-radius:50%;
+  right:-150px;top:-120px
+}
+.auth-brand:after{
+  content:"";position:absolute;width:260px;height:260px;
+  border:1px solid #ffffff20;border-radius:50%;
+  left:-120px;bottom:-100px
+}
+.auth-brand-content{position:relative;z-index:1}
+.auth-brand-logo{
+  font-size:30px;font-weight:800;letter-spacing:-1px;
+  margin-bottom:65px
+}
+.auth-brand-logo span{color:#a9c0ff}
+.auth-brand h2{
+  font-size:38px;line-height:1.15;margin:0 0 20px;
+  letter-spacing:-1px
+}
+.auth-brand p{
+  color:#dce6ff;font-size:16px;line-height:1.8;
+  max-width:390px
+}
+.auth-decoration{margin-top:40px;display:grid;gap:15px}
+.auth-decoration-item{
+  display:flex;align-items:center;gap:12px;
+  color:#edf2ff;font-size:14px
+}
+.auth-decoration-icon{
+  width:34px;height:34px;display:grid;place-items:center;
+  border-radius:10px;background:#ffffff20;font-size:17px
+}
+.auth-brand-footer{
+  position:relative;z-index:1;margin-top:55px;
+  color:#bdccef;font-size:12px
+}
+.auth-panel{
+  padding:55px;display:flex;flex-direction:column;
+  justify-content:center
+}
+.auth-card{width:100%;max-width:390px;margin:auto}
+.auth-card h1{margin:0 0 8px;font-size:29px;color:#182230}
+.auth-card>p{color:#7b8493;font-size:14px;line-height:1.6;margin:0}
+.auth-form{display:grid;gap:16px;margin-top:28px}
+.auth-form label{font-weight:600}
+.auth-form input{padding:13px;border-radius:9px;margin-top:3px}
+.auth-form input:focus{
+  outline:none;border-color:#315efb;
+  box-shadow:0 0 0 3px #315efb18
+}
+.auth-form .primary{padding:13px;margin-top:5px;box-shadow:0 5px 12px #315efb30}
+.auth-links{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:20px}
+.link-btn{background:none;border:0;color:var(--blue);padding:4px 0;font-size:13px}
+.link-btn:hover{text-decoration:underline}
+.auth-message{
+  padding:12px;border-radius:9px;background:#eef3ff;
+  color:#2445a0;font-size:13px;line-height:1.5;margin-top:18px
+}
+.error-message{background:#fff0f0;color:#a52f2f}
+
+/* SISTEMA */
+.app{display:flex;min-height:100vh}
+.side{
+  width:245px;background:var(--nav);color:white;padding:24px 16px;
+  display:flex;flex-direction:column;gap:22px
+}
+.brand{font-size:21px;font-weight:750;padding:0 10px}
+.brand small{display:block;color:#aab6c8;font-size:12px;font-weight:400;margin-top:4px}
+.nav{display:grid;gap:6px}
+.nav button{
+  background:transparent;border:0;color:#cbd5e1;text-align:left;
+  padding:12px;border-radius:9px;font-size:15px
+}
+.nav button.active,.nav button:hover{background:#293a56;color:white}
+.side-note{margin-top:auto;color:#aab6c8;font-size:12px;line-height:1.5;padding:10px;overflow-wrap:anywhere}
+main{flex:1;min-width:0;padding:28px clamp(16px,3vw,42px);max-width:1500px;margin:0 auto;width:100%}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px}
+.eyebrow{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+.top h1{font-size:27px;margin:3px 0 0}
+.actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.primary{background:var(--blue);color:white;border:0;border-radius:9px;padding:11px 15px;font-weight:650}
+.secondary{background:white;border:1px solid var(--line);border-radius:9px;padding:10px 13px;color:var(--ink)}
+.danger{color:var(--red);border:1px solid #f0d4d4;background:white;border-radius:8px;padding:8px 10px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 2px 8px #15233b08}
+.stat-label{font-size:13px;color:var(--muted)}
+.stat{font-size:30px;font-weight:750;margin-top:8px}
+.stat-sub{font-size:12px;color:var(--muted);margin-top:3px}
+.section{margin-top:22px}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.section h2{font-size:17px;margin:0}
+.muted{color:var(--muted)}
+.list{display:grid;gap:9px}
+
+/* TAREFAS: COR DE FUNDO CONFORME A PRIORIDADE */
+.task{
+  display:flex;align-items:center;gap:12px;padding:13px;
+  border:1px solid var(--line);border-left:5px solid #315efb;
+  border-radius:11px;background:white;
+  transition:background .2s,border-color .2s
+}
+.task.priority-low{background:#eaf3ff;border-left-color:#3983df}
+.task.priority-medium{background:#fff5d9;border-left-color:#d6a52b}
+.task.priority-high{background:#ffe9e9;border-left-color:#d94b4b}
+.task.state-done{background:#dff3e6;border-color:#16865b}
+.task.state-archived{background:#e8e9ec;border-color:#9299a5}
+.task-main{min-width:0;flex:1}
+.task-title{font-weight:700;overflow-wrap:anywhere;font-size:17px;line-height:1.4}
+.task-main{cursor:pointer;min-width:0;flex:1}
+.task-main:hover .task-title{color:var(--blue);text-decoration:underline}
+.daytask{cursor:pointer}
+.daytask:hover{filter:brightness(.96);outline:1px solid currentColor}
+.task-meta{font-size:14px;color:#566274;margin-top:6px;line-height:1.5}
+.pill{display:inline-flex;align-items:center;border-radius:99px;padding:7px 11px;font-size:14px;font-weight:700;background:#eef2f7;color:#526071;white-space:nowrap}
+.p-high{background:#ffd2d2;color:#9e2424}
+.p-medium{background:#ffe7a8;color:#805000}
+.p-low{background:#d5e8ff;color:#174f91}
+.s-done{background:#c5ead2;color:#11613e}
+.s-progress{background:#dce6ff;color:#2448a8}
+
+/* LEGENDA DAS CORES */
+.color-legend{
+  display:flex;flex-wrap:wrap;gap:12px;margin:12px 0 16px
+}
+.legend-item{
+  display:flex;align-items:center;gap:6px;
+  font-size:13px;font-weight:600;color:var(--muted)
+}
+.legend-dot{
+  width:10px;height:10px;border-radius:50%;flex-shrink:0
+}
+
+.toolbar{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:13px}
+.toolbar input,.toolbar select{max-width:240px}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.full{grid-column:1/-1}
+.empty{padding:30px;text-align:center;color:var(--muted);background:white;border:1px dashed #d8dee8;border-radius:12px}
+.tablewrap{overflow:auto;background:white;border:1px solid var(--line);border-radius:12px}
+table{width:100%;border-collapse:collapse;min-width:600px}
+th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);font-size:14px}
+th{color:var(--muted);font-weight:650;background:#fafbfc}
+.month{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}
+.day{background:white;border:1px solid var(--line);border-radius:9px;min-height:90px;padding:8px;font-size:12px}
+.day strong{display:block;margin-bottom:5px}
+.day.today{border-color:var(--blue)}
+.daytask{
+  display:block;border-radius:5px;padding:3px 4px;margin-top:4px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  background:#fff0bd;color:#795500
+}
+.daytask.priority-low{background:#dceaff;color:#174f91}
+.daytask.priority-medium{background:#ffe7a8;color:#805000}
+.daytask.priority-high{background:#ffd2d2;color:#9e2424}
+.daytask.state-done{background:#c5ead2;color:#11613e}
+.daytask.state-archived{background:#e0e2e6;color:#626b78}
+
+.modalback{position:fixed;inset:0;background:#10182880;display:none;align-items:center;justify-content:center;padding:16px;z-index:5}
+.modal{background:white;border-radius:15px;padding:22px;width:min(650px,100%);max-height:90vh;overflow:auto}
+.modal h2{margin:0 0 17px}
+.modalfoot{display:flex;justify-content:flex-end;gap:9px;margin-top:18px}
+/* PAINEL PROFISSIONAL DE DETALHES */
+.task-details-modal{width:min(780px,100%);padding:0;border-radius:20px;overflow:hidden;box-shadow:0 28px 90px #10182835}
+.task-details-top{padding:25px 28px 22px;background:linear-gradient(135deg,#f7f9ff,#edf2ff);border-bottom:1px solid var(--line)}
+.task-details-topline{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:17px}
+.task-details-kicker{font-size:11px;letter-spacing:1.15px;text-transform:uppercase;font-weight:800;color:#64748b}
+.task-details-close{width:36px;height:36px;border:1px solid #dbe2ef;border-radius:11px;background:#fff;color:#526078;font-size:20px;line-height:1}
+.task-details-title{font-size:25px;line-height:1.25;letter-spacing:-.55px;font-weight:800;color:#17243a;margin:0 0 15px;overflow-wrap:anywhere}
+.task-details-badges{display:flex;flex-wrap:wrap;gap:8px}
+.task-details-badge{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;font-size:12px;font-weight:750;border:1px solid transparent}
+.task-details-body{padding:25px 28px 27px;display:grid;gap:22px}
+.task-details-section{display:grid;gap:12px}
+.task-details-section-title{display:flex;align-items:center;gap:9px;margin:0;color:#344256;font-size:13px;font-weight:800;letter-spacing:.35px;text-transform:uppercase}
+.task-details-section-title:before{content:"";width:4px;height:16px;border-radius:5px;background:var(--blue)}
+.task-details-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.task-detail-card{min-width:0;padding:14px 15px;background:#fbfcfe;border:1px solid #e8edf4;border-radius:13px}
+.task-detail-label{display:block;color:#778397;font-size:10px;font-weight:800;letter-spacing:.75px;text-transform:uppercase;margin-bottom:7px}
+.task-detail-value{display:block;color:#243247;font-size:14px;font-weight:650;line-height:1.5;overflow-wrap:anywhere}
+.task-detail-value.missing{color:#9aa4b2;font-weight:500}
+.task-details-description{padding:17px 18px;background:#fbfcfe;border:1px solid #e8edf4;border-radius:13px;color:#344256;font-size:14px;line-height:1.75;white-space:normal;overflow-wrap:anywhere;min-height:70px}
+.task-details-description.empty{min-height:0;padding:16px;color:#9aa4b2;font-style:italic}
+.task-details-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:17px 28px;background:#fafbfc;border-top:1px solid var(--line)}
+.task-details-footer-actions{display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap}
+@media(max-width:560px){
+ .task-details-modal{max-height:94vh;border-radius:16px}
+ .task-details-top{padding:20px 18px 18px}
+ .task-details-title{font-size:21px}
+ .task-details-body{padding:19px 18px;gap:18px}
+ .task-details-grid{grid-template-columns:1fr 1fr;gap:8px}
+ .task-detail-card{padding:11px}
+ .task-detail-value{font-size:13px}
+ .task-details-footer{padding:14px 18px;align-items:stretch;flex-direction:column-reverse}
+ .task-details-footer-actions{width:100%}
+ .task-details-footer-actions button{flex:1}
+}
+.notice{padding:12px 14px;border-radius:10px;background:#fff6e6;color:#81550e;border:1px solid #f1dfb9;margin-bottom:14px;font-size:13px}
+.progress{height:9px;background:#edf0f5;border-radius:99px;overflow:hidden}
+.progress span{display:block;height:100%;background:var(--green)}
+.status-text{font-size:12px;color:var(--muted);margin-top:8px}
+.dashboard-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;margin-top:18px}
+.dashboard-bars{display:grid;gap:11px;margin-top:14px}
+.dashboard-bar-row{display:grid;grid-template-columns:minmax(78px,110px) 1fr 34px;gap:10px;align-items:center;font-size:13px}
+.dashboard-bar-track{height:11px;border-radius:99px;background:#edf0f5;overflow:hidden}
+.dashboard-bar-fill{height:100%;border-radius:99px;background:#315efb;min-width:0}
+.priority-breakdown{display:grid;gap:10px;margin-top:14px}
+.priority-line{display:grid;grid-template-columns:70px 1fr 28px;gap:9px;align-items:center;font-size:13px}
+.project-progress-list{display:grid;gap:14px;margin-top:14px}
+.project-progress-item{display:grid;gap:6px}
+.project-progress-heading{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+.activity-list{display:grid;gap:9px;margin-top:12px}
+.activity-item{padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:13px}
+.task-details-top{cursor:move;touch-action:none;user-select:none}
+@media(max-width:850px){.dashboard-grid{grid-template-columns:1fr}}
+@media(max-width:560px){.dashboard-bar-row{grid-template-columns:72px 1fr 28px;gap:7px}.dashboard-grid{gap:10px}}
+.admin-user{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:13px;background:white;border:1px solid var(--line);border-radius:10px}
+.admin-user-info{min-width:180px;flex:1}
+.admin-user-actions{display:flex;gap:7px;flex-wrap:wrap}
+
+@media(max-width:850px){
+  .side{width:68px;padding:16px 8px}
+  .brand{font-size:0;padding:0 8px}
+  .brand:before{content:"MR";font-size:17px}
+  .brand small,.nav .txt,.side-note{display:none}
+  .nav button{text-align:center;font-size:0;padding:13px 4px}
+  .nav button:before{content:attr(data-icon);font-size:18px}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:750px){
+  .auth-screen{padding:15px}
+  .auth-layout{grid-template-columns:1fr;min-height:auto}
+  .auth-brand{padding:30px}
+  .auth-brand-logo{margin-bottom:25px;font-size:25px}
+  .auth-brand h2{font-size:28px}
+  .auth-brand p{font-size:14px}
+  .auth-decoration{margin-top:20px;gap:9px}
+  .auth-brand-footer{margin-top:25px}
+  .auth-panel{padding:35px 25px}
+}
+@media(max-width:560px){
+  .app{display:block}
+  .side{width:auto;height:auto;padding:8px;position:sticky;top:0;z-index:3}
+  .brand{display:none}
+  .nav{display:flex;overflow:auto}
+  .nav button{white-space:nowrap;padding:9px 11px;font-size:12px}
+  .nav button:before{content:""}
+  .nav .txt{display:inline}
+  .side-note{display:none}
+  main{padding:19px 13px}
+  .top{align-items:flex-start;flex-direction:column}
+  .top h1{font-size:23px}
+  .grid{gap:9px}
+  .card{padding:13px}
+  .stat{font-size:25px}
+  .formgrid{grid-template-columns:1fr}
+  .full{grid-column:auto}
+  .month{gap:3px}
+  .day{min-height:68px;padding:4px;font-size:10px}
+  .task{flex-wrap:wrap}
+  .task-main{flex-basis:65%}
+}
+@media(max-width:420px){
+  .auth-brand{padding:25px 22px}
+  .auth-panel{padding:30px 20px}
+}
+</style>
+</head>
+
+<body>
+
+<!-- TELA DE LOGIN -->
+<div id="authScreen" class="auth-screen">
+  <div class="auth-layout">
+    <div class="auth-brand">
+      <div class="auth-brand-content">
+        <div class="auth-brand-logo">Minha <span>Rotina.</span></div>
+        <h2>Sua rotina,<br>mais organizada.</h2>
+        <p>
+          Tenha mais controle sobre seu tempo,
+          organize suas tarefas e acompanhe
+          cada conquista do seu dia.
+        </p>
+        <div class="auth-decoration">
+          <div class="auth-decoration-item">
+            <div class="auth-decoration-icon">✓</div>
+            Organize suas tarefas e prioridades
+          </div>
+          <div class="auth-decoration-item">
+            <div class="auth-decoration-icon">▦</div>
+            Acompanhe seus compromissos
+          </div>
+          <div class="auth-decoration-item">
+            <div class="auth-decoration-icon">↗</div>
+            Acompanhe seu progresso e evolução
+          </div>
+        </div>
+      </div>
+      <div class="auth-brand-footer">Planeje. Organize. Realize.</div>
+    </div>
+
+    <div class="auth-panel">
+      <div class="auth-card">
+        <div id="loginArea">
+          <h1>Bem-vindo!</h1>
+          <p>Acesse sua conta para continuar sua jornada.</p>
+          <form id="loginForm" class="auth-form">
+            <label>E-mail
+              <input id="loginEmail" type="email" required autocomplete="email" placeholder="seu@email.com">
+            </label>
+            <label>Senha
+              <input id="loginPassword" type="password" required autocomplete="current-password" placeholder="Sua senha">
+            </label>
+            <button class="primary" type="submit">Entrar na minha conta</button>
+          </form>
+          <div class="auth-links">
+            <button class="link-btn" onclick="showRegister()">Criar uma conta</button>
+            <button class="link-btn" onclick="showRecovery()">Esqueci minha senha</button>
+          </div>
+        </div>
+
+        <div id="registerArea" class="hidden">
+          <h1>Crie sua conta</h1>
+          <p>Comece a organizar sua rotina hoje mesmo.</p>
+          <form id="registerForm" class="auth-form">
+            <label>Nome completo
+              <input id="registerName" required maxlength="120" autocomplete="name">
+            </label>
+            <label>E-mail
+              <input id="registerEmail" type="email" required autocomplete="email">
+            </label>
+            <label>Senha
+              <input id="registerPassword" type="password" required minlength="6" autocomplete="new-password" placeholder="Mínimo de 6 caracteres">
+            </label>
+            <button class="primary" type="submit">Criar minha conta</button>
+          </form>
+          <div class="auth-links">
+            <button class="link-btn" onclick="showLogin()">Voltar ao login</button>
+          </div>
+        </div>
+
+        <div id="recoveryArea" class="hidden">
+          <h1>Recuperar senha</h1>
+          <p>Informe seu e-mail para receber as instruções de recuperação.</p>
+          <form id="recoveryForm" class="auth-form">
+            <label>Informe seu e-mail
+              <input id="recoveryEmail" type="email" required autocomplete="email">
+            </label>
+            <button class="primary" type="submit">Enviar recuperação</button>
+          </form>
+          <div class="auth-links">
+            <button class="link-btn" onclick="showLogin()">Voltar ao login</button>
+          </div>
+        </div>
+
+        <div id="authMessage" class="hidden"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SISTEMA -->
+<div class="app hidden" id="app">
+  <aside class="side">
+    <div class="brand">Minha Rotina
+      <small>Organize seu dia. Acompanhe sua evolução.</small>
+    </div>
+
+    <nav class="nav">
+      <button class="active" data-page="inicio" data-icon="⌂"><span class="txt">⌂ &nbsp; Visão geral</span></button>
+      <button data-page="tarefas" data-icon="✓"><span class="txt">✓ &nbsp; Minhas tarefas</span></button>
+      <button data-page="calendario" data-icon="▦"><span class="txt">▦ &nbsp; Calendário</span></button>
+      <button data-page="projetos" data-icon="▤"><span class="txt">▤ &nbsp; Projetos</span></button>
+      <button data-page="relatorios" data-icon="▥"><span class="txt">▥ &nbsp; Relatórios</span></button>
+      <button data-page="config" data-icon="⚙"><span class="txt">⚙ &nbsp; Configurações</span></button>
+      <button id="adminNav" class="hidden" data-page="admin" data-icon="♙"><span class="txt">♙ &nbsp; Administração</span></button>
+    </nav>
+
+    <div class="side-note">
+      <div id="sideUser"></div>
+      <div>Dados sincronizados com a nuvem.</div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="top">
+      <div>
+        <div class="eyebrow">Seu espaço pessoal</div>
+        <h1 id="pageTitle">Visão geral</h1>
+      </div>
+      <div class="actions">
+        <button class="secondary" onclick="exportData()">Exportar backup</button>
+        <button class="secondary" onclick="signOut()">Sair</button>
+        <button class="primary" onclick="openTask()">+ Nova tarefa</button>
+      </div>
+    </div>
+    <div id="content"></div>
+  </main>
+</div>
+
+<!-- MODAL TAREFA -->
+<div class="modalback" id="taskModal">
+  <div class="modal">
+    <h2 id="modalTitle">Nova tarefa</h2>
+    <form id="taskForm">
+      <input type="hidden" id="taskId">
+      <div class="formgrid">
+        <label class="full">Nome da tarefa *
+          <input id="fTitle" required maxlength="140" placeholder="Ex.: Estudar para a prova">
+        </label>
+        <label>Categoria
+          <input id="fCategory" list="categories" placeholder="Pessoal, estudos, trabalho...">
+          <datalist id="categories">
+            <option>Pessoal</option><option>Trabalho</option><option>Estudos</option><option>Saúde</option><option>Casa</option>
+          </datalist>
+        </label>
+        <label>Projeto
+          <select id="fProject"><option value="">Sem projeto</option></select>
+        </label>
+        <label>Prioridade
+          <select id="fPriority">
+            <option value="Baixa">Baixa</option>
+            <option value="Média" selected>Média</option>
+            <option value="Alta">Alta</option>
+          </select>
+        </label>
+        <label>Status
+          <select id="fStatus">
+            <option value="A fazer">A fazer</option>
+            <option value="Em andamento">Em andamento</option>
+            <option value="Concluída">Concluída</option>
+            <option value="Arquivada">Arquivada</option>
+          </select>
+        </label>
+        <label>Data de início<input id="fStart" type="date"></label>
+        <label>Prazo<input id="fDue" type="date"></label>
+        <label>Repetição
+          <select id="fRepeat"><option>Nenhuma</option><option>Diária</option><option>Semanal</option><option>Mensal</option></select>
+        </label>
+        <label class="full">Descrição / observações
+          <textarea id="fNotes" placeholder="Detalhes, links ou informações importantes"></textarea>
+        </label>
+      </div>
+      <div class="modalfoot">
+        <button type="button" class="secondary" onclick="closeTask()">Cancelar</button>
+        <button class="primary" type="submit" id="saveTaskButton">Salvar tarefa</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL DE VISUALIZAÇÃO DA TAREFA (SOMENTE LEITURA) -->
+<div class="modalback" id="taskDetailsModal" onclick="if(event.target===this)closeTaskDetails()">
+  <div class="modal task-details-modal" role="dialog" aria-modal="true" aria-labelledby="taskDetailsTitle">
+    <div id="taskDetailsContent"></div>
+  </div>
+</div>
+
+<!-- MODAL PROJETO -->
+<div class="modalback" id="projectModal">
+  <div class="modal">
+    <h2>Novo projeto</h2>
+    <form id="projectForm">
+      <div class="formgrid">
+        <label class="full">Nome do projeto *
+          <input id="pName" required>
+        </label>
+        <label class="full">Descrição
+          <textarea id="pDesc"></textarea>
+        </label>
+        <label>Status
+          <select id="pStatus"><option>Planejado</option><option>Em andamento</option><option>Concluído</option></select>
+        </label>
+        <label>Prazo<input id="pDue" type="date"></label>
+      </div>
+      <div class="modalfoot">
+        <button type="button" class="secondary" onclick="$('projectModal').style.display='none'">Cancelar</button>
+        <button class="primary" type="submit">Salvar projeto</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+/* SUPABASE */
+const SUPABASE_URL='https://cpelaccbiqwbaqhhatcf.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_O5M2om2qqeWve-KJbPsKIQ_c9g7sWzp';
+
+const supabaseClient=window.supabase?.createClient
+  ?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY)
+  :null;
+
+let currentUser=null;
+let isAdmin=false;
+let db={tasks:[],projects:[]};
+let page='inicio';
+let monthCursor=new Date();
+let busy=false;
+
+const $=id=>document.getElementById(id);
+const today=()=>{
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+};
+const uuid=()=>crypto.randomUUID();
+
+/* CONVERSÃO DE PRIORIDADES */
+function priorityToDb(priority){
+  const priorities={'Baixa':'low','Média':'medium','Alta':'high','Urgente':'high','low':'low','medium':'medium','high':'high','urgent':'high'};
+  return priorities[priority]||'medium';
+}
+function priorityFromDb(priority){
+  const priorities={'low':'Baixa','medium':'Média','high':'Alta','urgent':'Alta','Baixa':'Baixa','Média':'Média','Alta':'Alta','Urgente':'Alta'};
+  return priorities[priority]||'Média';
+}
+
+/* CONVERSÃO DE STATUS */
+function statusToDb(status){
+  const statuses={'A fazer':'pending','Em andamento':'in_progress','Concluída':'completed','Arquivada':'cancelled','pending':'pending','in_progress':'in_progress','completed':'completed','cancelled':'cancelled'};
+  return statuses[status]||'pending';
+}
+function statusFromDb(status){
+  const statuses={'pending':'A fazer','in_progress':'Em andamento','completed':'Concluída','cancelled':'Arquivada','A fazer':'A fazer','Em andamento':'Em andamento','Concluída':'Concluída','Arquivada':'Arquivada'};
+  return statuses[status]||'A fazer';
+}
+
+function esc(s=''){
+  return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function dateBR(d){
+  if(!d)return 'Sem prazo';
+  const raw=String(d);
+  const dateOnly=/^\d{4}-\d{2}-\d{2}$/.test(raw);
+  const parsed=dateOnly?new Date(raw+'T12:00:00'):new Date(raw);
+  return Number.isNaN(parsed.getTime())?'Não definida':parsed.toLocaleDateString('pt-BR');
+}
+function dateTimeBR(value){
+  if(!value)return 'Não registrado';
+  const d=new Date(value);
+  return Number.isNaN(d.getTime())?'Não registrado':d.toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});
+}
+function elapsedBR(start,end){
+  if(!start)return 'Não calculado';
+  const a=new Date(start).getTime(),b=end?new Date(end).getTime():Date.now();
+  if(!Number.isFinite(a)||!Number.isFinite(b)||b<a)return 'Não calculado';
+  let minutes=Math.floor((b-a)/60000);
+  const days=Math.floor(minutes/1440);minutes%=1440;
+  const hours=Math.floor(minutes/60);minutes%=60;
+  const parts=[];
+  if(days)parts.push(days+' dia(s)');
+  if(hours)parts.push(hours+'h');
+  parts.push(minutes+'min');
+  return parts.join(' ');
+}
+function showMessage(message,error=false){
+  const el=$('authMessage');
+  el.textContent=message;
+  el.className=error?'auth-message error-message':'auth-message';
+}
+function clearMessage(){
+  $('authMessage').textContent='';
+  $('authMessage').className='hidden';
+}
+function setBusy(value){
+  busy=value;
+  document.querySelectorAll('.auth-form button').forEach(b=>b.disabled=value);
+}
+function showAuthArea(area){
+  ['loginArea','registerArea','recoveryArea'].forEach(id=>$(id).classList.toggle('hidden',id!==area));
+  clearMessage();
+}
+function showLogin(){showAuthArea('loginArea')}
+function showRegister(){showAuthArea('registerArea')}
+function showRecovery(){showAuthArea('recoveryArea')}
+
+if(!supabaseClient){
+  showMessage('Não foi possível carregar a conexão com o Supabase. Verifique sua internet e atualize a página.',true);
+}
+
+/* AUTENTICAÇÃO */
+$('loginForm').onsubmit=async e=>{
+  e.preventDefault();
+  if(busy||!supabaseClient)return;
+  setBusy(true);clearMessage();
+  try{
+    const {error}=await supabaseClient.auth.signInWithPassword({
+      email:$('loginEmail').value.trim(),
+      password:$('loginPassword').value
+    });
+    if(error)throw error;
+  }catch(error){
+    showMessage(error.message||'Não foi possível entrar.',true);
+  }finally{setBusy(false)}
+};
+
+$('registerForm').onsubmit=async e=>{
+  e.preventDefault();
+  if(busy||!supabaseClient)return;
+  setBusy(true);clearMessage();
+  try{
+    const name=$('registerName').value.trim();
+    const {data,error}=await supabaseClient.auth.signUp({
+      email:$('registerEmail').value.trim(),
+      password:$('registerPassword').value,
+      options:{data:{full_name:name}}
+    });
+    if(error)throw error;
+    if(data.session){
+      showMessage('Conta criada! Você já pode utilizar o sistema.');
+    }else{
+      showLogin();
+      showMessage('Cadastro realizado! Confira seu e-mail e clique no link de confirmação antes de entrar.');
+    }
+    $('registerForm').reset();
+  }catch(error){
+    showMessage(error.message||'Não foi possível criar a conta.',true);
+  }finally{setBusy(false)}
+};
+
+$('recoveryForm').onsubmit=async e=>{
+  e.preventDefault();
+  if(busy||!supabaseClient)return;
+  setBusy(true);clearMessage();
+  try{
+    const {error}=await supabaseClient.auth.resetPasswordForEmail($('recoveryEmail').value.trim());
+    if(error)throw error;
+    showMessage('Se o endereço estiver cadastrado, você receberá um e-mail com as instruções para redefinir a senha.');
+  }catch(error){
+    showMessage(error.message||'Não foi possível solicitar a recuperação.',true);
+  }finally{setBusy(false)}
+};
+
+async function signOut(){
+  if(!confirm('Deseja sair da sua conta?'))return;
+  const {error}=await supabaseClient.auth.signOut();
+  if(error)alert(error.message);
+}
+
+supabaseClient?.auth.onAuthStateChange((_event,session)=>{
+  setTimeout(()=>handleSession(session),0);
+});
+
+async function handleSession(session){
+  if(!session?.user){
+    currentUser=null;isAdmin=false;
+    $('app').classList.add('hidden');
+    $('authScreen').classList.remove('hidden');
+    return;
+  }
+  if(currentUser?.id===session.user.id&&!$('app').classList.contains('hidden'))return;
+  currentUser=session.user;
+  $('authScreen').classList.add('hidden');
+  $('app').classList.remove('hidden');
+  $('sideUser').textContent=session.user.email||'Conta conectada';
+  await loadCloudData();
+}
+
+/* CARREGAR DADOS */
+async function loadCloudData(){
+  $('content').innerHTML='<div class="empty">Carregando seus dados...</div>';
+  try{
+    const {data:adminData,error:adminError}=await supabaseClient.rpc('is_app_admin');
+    isAdmin=!adminError&&adminData===true;
+    $('adminNav').classList.toggle('hidden',!isAdmin);
+
+    const [projectsResult,tasksResult,categoriesResult]=await Promise.all([
+      supabaseClient.from('projects').select('*').order('created_at',{ascending:false}),
+      supabaseClient.from('tasks').select('*').order('created_at',{ascending:false}),
+      supabaseClient.from('categories').select('*')
+    ]);
+    if(projectsResult.error)throw projectsResult.error;
+    if(tasksResult.error)throw tasksResult.error;
+    if(categoriesResult.error)throw categoriesResult.error;
+
+    const categories=new Map((categoriesResult.data||[]).map(c=>[c.id,c.name]));
+    db.projects=(projectsResult.data||[]).map(p=>({
+      id:p.id,name:p.name,desc:p.description||'',status:p.status||'Planejado',due:p.due_date||''
+    }));
+    db.tasks=(tasksResult.data||[]).map(t=>({
+      id:t.id,title:t.title,category:categories.get(t.category_id)||'',
+      project:t.project_id||'',priority:priorityFromDb(t.priority),
+      status:statusFromDb(t.status),start:t.start_date||'',
+      due:t.due_date||'',repeat:t.repeat||'Nenhuma',
+      notes:t.description||'',created:t.created_at||'',startedAt:t.started_at||'',completedAt:t.completed_at||''
+    }));
+    page='inicio';
+    document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page==='inicio'));
+    render();
+  }catch(error){
+    $('content').innerHTML=`<div class="notice">Não foi possível carregar os dados: ${esc(error.message||'Erro desconhecido')}</div>
+    <button class="primary" onclick="loadCloudData()">Tentar novamente</button>`;
+  }
+}
+
+/* CATEGORIAS E GRAVAÇÃO */
+async function getCategoryId(name){
+  if(!name)return null;
+  const clean=name.trim();
+  if(!clean)return null;
+  const {data,error}=await supabaseClient.from('categories').select('id')
+    .eq('user_id',currentUser.id).eq('name',clean).maybeSingle();
+  if(error)throw error;
+  if(data)return data.id;
+  const {data:created,error:createError}=await supabaseClient.from('categories')
+    .insert({user_id:currentUser.id,name:clean,color:'#315efb'}).select('id').single();
+  if(createError)throw createError;
+  return created.id;
+}
+
+async function saveTaskToCloud(t){
+  const categoryId=await getCategoryId(t.category);
+  const payload={
+    id:t.id,user_id:currentUser.id,created_by:currentUser.id,
+    assigned_to:null,category_id:categoryId,project_id:t.project||null,
+    title:t.title,description:t.notes||'',
+    priority:priorityToDb(t.priority),status:statusToDb(t.status),
+    start_date:t.start||null,due_date:t.due||null,
+    repeat:t.repeat||'Nenhuma',
+    started_at:t.startedAt||null,
+    completed_at:t.status==='Concluída'?(t.completedAt||new Date().toISOString()):null,
+    is_archived:t.status==='Arquivada'
+  };
+  const {error}=await supabaseClient.from('tasks').upsert(payload);
+  if(error)throw error;
+}
+
+async function saveProjectToCloud(p){
+  const payload={
+    id:p.id,user_id:currentUser.id,name:p.name,
+    description:p.desc||'',status:p.status||'Planejado',due_date:p.due||null
+  };
+  const {error}=await supabaseClient.from('projects').upsert(payload);
+  if(error)throw error;
+}
+
+/* TAREFAS */
+function dueState(t){
+  return t.due&&t.due<today()&&!['Concluída','Arquivada'].includes(t.status);
+}
+
+/* DEFINIÇÃO AUTOMÁTICA DAS CORES */
+function taskColorClass(t){
+  if(t.status==='Concluída')return 'state-done';
+  if(t.status==='Arquivada')return 'state-archived';
+  if(t.priority==='Alta'||t.priority==='Urgente')return 'priority-high';
+  if(t.priority==='Baixa')return 'priority-low';
+  return 'priority-medium';
+}
+
+/* LEGENDA DAS CORES */
+function colorLegend(){
+  return `
+    <div class="color-legend">
+      <span class="legend-item"><span class="legend-dot" style="background:#3983df"></span>Baixa</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#d6a52b"></span>Média</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#d94b4b"></span>Alta</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#16865b"></span>Concluída</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#9299a5"></span>Arquivada</span>
+    </div>
+  `;
+}
+
+function priorityClass(p){
+  if(p==='Alta'||p==='Urgente')return 'p-high';
+  if(p==='Média')return 'p-medium';
+  return 'p-low';
+}
+
+function projectName(id){
+  return db.projects.find(p=>p.id===id)?.name||'';
+}
+
+function priorityRank(priority){
+  return priority==='Alta'?0:priority==='Média'?1:2;
+}
+function sortTasksByPriority(tasks){
+  return [...tasks].sort((a,b)=>priorityRank(a.priority)-priorityRank(b.priority)||
+    (a.due||'9999-12-31').localeCompare(b.due||'9999-12-31'));
+}
+
+/* LINHA DA TAREFA */
+function taskRow(t){
+  const late=dueState(t);
+
+  return `<div class="task ${taskColorClass(t)}">
+    <input type="checkbox" style="width:18px;height:18px"
+      ${t.status==='Concluída'?'checked':''}
+      ${t.status==='Arquivada'?'disabled':''}
+      onchange="toggleTask('${t.id}',this.checked)"
+      aria-label="Concluir">
+
+    <div class="task-main" onclick="openTaskDetails('${t.id}')" title="Ver detalhes da tarefa" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTaskDetails('${t.id}')}" >
+      <div class="task-title">${esc(t.title)}</div>
+      <div class="task-meta">
+        ${esc(t.category||'Sem categoria')}
+        · Início: ${t.start?dateBR(t.start):'Não definida'}
+        · Fim: ${t.due?dateBR(t.due):'Não definido'}
+        ${t.project?' · '+esc(projectName(t.project)):''}
+      </div>
+    </div>
+
+    <span class="pill ${priorityClass(t.priority)}">
+      ${esc(t.priority)}
+    </span>
+
+    <span class="pill ${
+      late?'p-high':
+      t.status==='Concluída'?'s-done':
+      t.status==='Em andamento'?'s-progress':''
+    }">
+      ${late?'Atrasada':esc(t.status)}
+    </span>
+
+    <button class="secondary" onclick="editTask('${t.id}')">Editar</button>
+    <button class="danger" onclick="deleteTask('${t.id}')">Excluir</button>
+  </div>`;
+}
+
+function openTaskDetails(id){
+  const t=db.tasks.find(x=>x.id===id);
+  if(!t)return;
+
+  const project=projectName(t.project);
+  const late=dueState(t);
+  const status=t.status||'A fazer';
+  const statusStyle=status==='Concluída'?'background:#e1f5e9;color:#137447;border-color:#c6ead5':
+    status==='Arquivada'?'background:#edf0f3;color:#596575;border-color:#dce1e7':
+    late?'background:#fff0ed;color:#b9382e;border-color:#ffd6d0':
+    status==='Em andamento'?'background:#eaf0ff;color:#3156b8;border-color:#d8e3ff':
+    'background:#f0f3f7;color:#596579;border-color:#e1e6ed';
+  const priorityStyle=(t.priority==='Alta'||t.priority==='Urgente')?'background:#fff0f0;color:#b83232;border-color:#ffd8d8':
+    t.priority==='Baixa'?'background:#edf5ff;color:#2863a5;border-color:#d8e9ff':
+    'background:#fff7e5;color:#93620b;border-color:#f4e4b8';
+  const card=(label,value,empty=false)=>`<div class="task-detail-card">
+    <span class="task-detail-label">${label}</span>
+    <span class="task-detail-value ${empty?'missing':''}">${value||'Não informado'}</span>
+  </div>`;
+  const safeDate=(d)=>d?esc(dateBR(d)):'Não definida';
+  const notes=t.notes?esc(t.notes).replace(/\r?\n/g,'<br>'):'Ainda não há descrição ou observações cadastradas.';
+
+  $('taskDetailsContent').innerHTML=`
+    <header class="task-details-top">
+      <div class="task-details-topline">
+        <span class="task-details-kicker">Visão completa da tarefa</span>
+        <button type="button" class="task-details-close" aria-label="Fechar detalhes" onclick="closeTaskDetails()">×</button>
+      </div>
+      <h2 class="task-details-title" id="taskDetailsTitle">${esc(t.title||'Tarefa sem título')}</h2>
+      <div class="task-details-badges">
+        <span class="task-details-badge" style="${priorityStyle}">● ${esc(t.priority||'Média')}</span>
+        <span class="task-details-badge" style="${statusStyle}">● ${late?'Atrasada':esc(status)}</span>
+      </div>
+    </header>
+    <div class="task-details-body">
+      <section class="task-details-section">
+        <h3 class="task-details-section-title">Informações gerais</h3>
+        <div class="task-details-grid">
+          ${card('Categoria',esc(t.category||'Sem categoria'),!t.category)}
+          ${card('Projeto',esc(project||'Sem projeto'),!project)}
+          ${card('Repetição',esc(t.repeat||'Nenhuma'))}
+        </div>
+      </section>
+      <section class="task-details-section">
+        <h3 class="task-details-section-title">Planejamento e prazos</h3>
+        <div class="task-details-grid">
+          ${card('Data de início',safeDate(t.start),!t.start)}
+          ${card('Prazo final',safeDate(t.due),!t.due)}
+          ${card('Finalização',safeDate(t.completedAt),!t.completedAt)}
+          ${card('Situação do prazo',late?'Prazo ultrapassado':t.status==='Concluída'?'Finalizada':t.status==='Arquivada'?'Arquivada':t.due?'Dentro do prazo':'Sem prazo definido',false)}
+        </div>
+      </section>
+      <section class="task-details-section">
+        <h3 class="task-details-section-title">Descrição e observações</h3>
+        <div class="task-details-description ${t.notes?'':'empty'}">${notes}</div>
+      </section>
+    </div>
+    <footer class="task-details-footer">
+      <span class="task-details-kicker">Modo de visualização · Somente leitura</span>
+      <div class="task-details-footer-actions">
+        <button type="button" class="secondary" onclick="closeTaskDetails()">Fechar</button>
+        <button type="button" class="primary" onclick="closeTaskDetails();editTask('${t.id}')">Editar tarefa</button>
+      </div>
+    </footer>`;
+  $('taskDetailsModal').style.display='flex';
+  enableTaskDetailsDrag();
+}
+function closeTaskDetails(){
+  const modal=document.querySelector('#taskDetailsModal .task-details-modal');
+  if(modal)modal.style.transform='';
+  $('taskDetailsModal').style.display='none';
+}
+
+function openTask(t=null){
+  $('taskForm').reset();
+  $('taskId').value=t?.id||'';
+  $('modalTitle').textContent=t?'Editar tarefa':'Nova tarefa';
+  $('fTitle').value=t?.title||'';
+  $('fCategory').value=t?.category||'';
+  $('fPriority').value=priorityFromDb(t?.priority||'Média');
+  $('fStatus').value=statusFromDb(t?.status||'A fazer');
+  $('fStart').value=t?.start||today();
+  $('fDue').value=t?.due||'';
+  $('fRepeat').value=t?.repeat||'Nenhuma';
+  $('fNotes').value=t?.notes||'';
+
+  $('fProject').innerHTML='<option value="">Sem projeto</option>'+
+    db.projects.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
+
+  $('fProject').value=t?.project||'';
+  $('taskModal').style.display='flex';
+}
+
+function closeTask(){
+  $('taskModal').style.display='none';
+}
+
+function editTask(id){
+  openTask(db.tasks.find(t=>t.id===id));
+}
+
+$('taskForm').onsubmit=async e=>{
+  e.preventDefault();
+  if(!currentUser)return;
+
+  const button=$('saveTaskButton');
+  button.disabled=true;
+  button.textContent='Salvando...';
+
+  try{
+    const id=$('taskId').value||uuid();
+    const old=db.tasks.find(t=>t.id===id);
+    const status=$('fStatus').value;
+
+    const t={
+      id,title:$('fTitle').value.trim(),
+      category:$('fCategory').value.trim(),
+      project:$('fProject').value,
+      priority:$('fPriority').value,
+      status,
+      start:$('fStart').value,
+      due:$('fDue').value,
+      repeat:$('fRepeat').value,
+      notes:$('fNotes').value,
+      created:old?.created||new Date().toISOString(),
+      startedAt:old?.startedAt||(['Em andamento','Concluída'].includes(status)?new Date().toISOString():''),
+      completedAt:status==='Concluída'?(old?.status==='Concluída'&&old?.completedAt?old.completedAt:new Date().toISOString()):''
+    };
+
+    await saveTaskToCloud(t);
+
+    if(old)Object.assign(old,t);
+    else db.tasks.unshift(t);
+
+    closeTask();
+    render();
+
+  }catch(error){
+    alert('Não foi possível salvar a tarefa: '+(error.message||'Erro desconhecido'));
+  }finally{
+    button.disabled=false;
+    button.textContent='Salvar tarefa';
+  }
+};
+
+async function toggleTask(id,checked){
+  const t=db.tasks.find(x=>x.id===id);
+  if(!t)return;
+
+  const previous={status:t.status,startedAt:t.startedAt,completedAt:t.completedAt};
+
+  t.status=checked?'Concluída':'A fazer';
+  if(checked){
+    t.startedAt=t.startedAt||new Date().toISOString();
+    t.completedAt=new Date().toISOString();
+  }else{
+    t.completedAt='';
+  }
+
+  try{
+    await saveTaskToCloud(t);
+    render();
+  }catch(error){
+    Object.assign(t,previous);
+    alert('Não foi possível atualizar a tarefa: '+error.message);
+    render();
+  }
+}
+
+async function deleteTask(id){
+  if(!confirm('Excluir esta tarefa permanentemente?'))return;
+
+  const {error}=await supabaseClient.from('tasks').delete().eq('id',id);
+
+  if(error){
+    alert('Não foi possível excluir: '+error.message);
+    return;
+  }
+
+  db.tasks=db.tasks.filter(t=>t.id!==id);
+  render();
+}
+
+/* VISÃO GERAL */
+function stats(){
+  const a=db.tasks;
+
+  return{
+    total:a.length,
+    open:a.filter(t=>!['Concluída','Arquivada'].includes(t.status)).length,
+    progress:a.filter(t=>t.status==='Em andamento').length,
+    done:a.filter(t=>t.status==='Concluída').length,
+    late:a.filter(dueState).length,
+    high:a.filter(t=>t.priority==='Alta'&&!['Concluída','Arquivada'].includes(t.status)).length
+  };
+}
+
+function card(label,note,num){
+  return `<div class="card">
+    <div class="stat-label">${label}</div>
+    <div class="stat">${num}</div>
+    <div class="stat-sub">${note}</div>
+  </div>`;
+}
+
+function dashboard(){
+  const s=stats();
+  const active=db.tasks.filter(t=>!['Concluída','Arquivada'].includes(t.status));
+  const up=sortTasksByPriority(active).sort((a,b)=>{
+    const priority=priorityRank(a.priority)-priorityRank(b.priority);
+    return priority||((a.due||'9999-12-31').localeCompare(b.due||'9999-12-31'));
+  }).slice(0,6);
+  const pct=s.total?Math.round(s.done/s.total*100):0;
+  const priorityCounts=[
+    {name:'Alta',count:active.filter(t=>t.priority==='Alta').length,color:'#d94b4b'},
+    {name:'Média',count:active.filter(t=>t.priority==='Média').length,color:'#d6a52b'},
+    {name:'Baixa',count:active.filter(t=>t.priority==='Baixa').length,color:'#3983df'}
+  ];
+  const periodCounts=[
+    {name:'A fazer',count:db.tasks.filter(t=>t.status==='A fazer').length},
+    {name:'Em andamento',count:s.progress},
+    {name:'Concluídas',count:s.done},
+    {name:'Atrasadas',count:s.late}
+  ];
+  const maxPeriod=Math.max(1,...periodCounts.map(x=>x.count));
+  const projects=db.projects.map(p=>{
+    const tasks=db.tasks.filter(t=>t.project===p.id);
+    const done=tasks.filter(t=>t.status==='Concluída').length;
+    return {...p,total:tasks.length,done,pct:tasks.length?Math.round(done/tasks.length*100):0};
+  }).sort((a,b)=>a.name.localeCompare(b.name));
+  const upcoming=[...active].filter(t=>t.due).sort((a,b)=>a.due.localeCompare(b.due)).slice(0,5);
+  const recent=[...db.tasks].filter(t=>t.completedAt||t.startedAt||t.created)
+    .sort((a,b)=>(b.completedAt||b.startedAt||b.created||'').localeCompare(a.completedAt||a.startedAt||a.created||''))
+    .slice(0,5);
+
+  return `
+    ${s.late?`<div class="notice">Você tem <b>${s.late}</b> tarefa(s) com prazo vencido. Revise sua lista para reorganizar as prioridades.</div>`:''}
+    <div class="grid">
+      ${card('Total de tarefas','Cadastradas',s.total)}
+      ${card('Pendentes','Aguardando início',db.tasks.filter(t=>t.status==='A fazer').length)}
+      ${card('Em andamento','Em execução',s.progress)}
+      ${card('Concluídas','Finalizadas',s.done)}
+      ${card('Atrasadas','Precisam de atenção',s.late)}
+      ${card('Projetos','Cadastrados',db.projects.length)}
+    </div>
+
+    <div class="section card">
+      <div class="section-head"><h2>Progresso geral</h2><b>${pct}%</b></div>
+      <div class="progress"><span style="width:${pct}%"></span></div>
+      <p class="muted" style="font-size:12px">${s.done} de ${s.total} tarefas concluídas.</p>
+    </div>
+
+    <div class="dashboard-grid">
+      <div class="card">
+        <h2>Visão de produtividade</h2>
+        <p class="muted" style="font-size:12px;margin:4px 0 0">Distribuição das tarefas por situação atual.</p>
+        <div class="dashboard-bars">
+          ${periodCounts.map(x=>`<div class="dashboard-bar-row"><span>${x.name}</span><div class="dashboard-bar-track"><div class="dashboard-bar-fill" style="width:${Math.round(x.count/maxPeriod*100)}%"></div></div><b>${x.count}</b></div>`).join('')}
+        </div>
+      </div>
+      <div class="card">
+        <h2>Prioridades em aberto</h2>
+        <div class="priority-breakdown">
+          ${priorityCounts.map(x=>`<div class="priority-line"><span>${x.name}</span><div class="dashboard-bar-track"><div class="dashboard-bar-fill" style="width:${active.length?Math.round(x.count/active.length*100):0}%;background:${x.color}"></div></div><b>${x.count}</b></div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="dashboard-grid">
+      <div class="card">
+        <h2>Acompanhamento dos projetos</h2>
+        ${projects.length?`<div class="project-progress-list">${projects.map(p=>`<div class="project-progress-item"><div class="project-progress-heading"><b>${esc(p.name)}</b><span>${p.done}/${p.total} · ${p.pct}%</span></div><div class="progress"><span style="width:${p.pct}%"></span></div><div class="muted" style="font-size:12px">${p.total-p.done} atividade(s) em aberto</div></div>`).join('')}</div>`:'<p class="muted">Nenhum projeto cadastrado.</p>'}
+      </div>
+      <div class="card">
+        <h2>Próximos prazos</h2>
+        ${upcoming.length?`<div class="activity-list">${upcoming.map(t=>`<div class="activity-item"><b>${esc(t.title)}</b><div class="muted">${dateBR(t.due)} · ${esc(t.priority)}${dueState(t)?' · Atrasada':''}</div></div>`).join('')}</div>`:'<p class="muted">Nenhum prazo próximo cadastrado.</p>'}
+      </div>
+    </div>
+
+    <div class="dashboard-grid">
+      <div class="card">
+        <div class="section-head"><h2>Tarefas prioritárias</h2><button class="secondary" onclick="go('tarefas')">Ver todas</button></div>
+        ${colorLegend()}
+        <div class="list">${up.length?up.map(taskRow).join(''):'<div class="empty">Nenhuma tarefa pendente. Adicione sua primeira tarefa!</div>'}</div>
+      </div>
+      <div class="card">
+        <h2>Atividade recente</h2>
+        ${recent.length?`<div class="activity-list">${recent.map(t=>`<div class="activity-item"><b>${esc(t.title)}</b><div class="muted">${esc(t.status)} · ${t.completedAt?'Finalizada em '+dateTimeBR(t.completedAt):t.startedAt?'Iniciada em '+dateTimeBR(t.startedAt):'Criada em '+dateTimeBR(t.created)}</div></div>`).join('')}</div>`:'<p class="muted">Ainda não há atividades registradas.</p>'}
+      </div>
+    </div>
+  `;
+}
+
+/* LISTA E FILTROS */
+function taskPage(){
+  return `
+    ${colorLegend()}
+
+    <div class="toolbar">
+      <input id="searchTask" placeholder="Buscar tarefa..." oninput="filterTasks()">
+
+      <select id="filterStatus" onchange="filterTasks()">
+        <option value="">Todos os status</option>
+        <option>A Fazer</option>
+        <option>Em andamento</option>
+        <option>Concluída</option>
+        <option>Arquivada</option>
+      </select>
+
+      <select id="filterPriority" onchange="filterTasks()">
+        <option value="">Todas as prioridades</option>
+        <option>Alta</option>
+        <option>Média</option>
+        <option>Baixa</option>
+      </select>
+    </div>
+
+    <div class="list" id="taskList">
+      ${db.tasks.length
+        ?sortTasksByPriority(db.tasks).map(taskRow).join('')
+        :'<div class="empty">Sua lista está vazia. Clique em “Nova tarefa” para começar.</div>'
+      }
+    </div>
+  `;
+}
+
+function filterTasks(){
+  const q=$('searchTask').value.toLowerCase();
+  const st=$('filterStatus').value;
+  const pr=$('filterPriority').value;
+
+  const arr=sortTasksByPriority(db.tasks.filter(t=>
+    (t.title+' '+t.category+' '+t.notes).toLowerCase().includes(q)&&
+    (!st||t.status===st)&&
+    (!pr||t.priority===pr)
+  ));
+
+  $('taskList').innerHTML=arr.length
+    ?arr.map(taskRow).join('')
+    :'<div class="empty">Nenhuma tarefa encontrada.</div>';
+}
+
+/* CALENDÁRIO */
+function calendarPage(){
+  const y=monthCursor.getFullYear();
+  const m=monthCursor.getMonth();
+  const first=new Date(y,m,1);
+  const offset=(first.getDay()+6)%7;
+  const days=new Date(y,m+1,0).getDate();
+
+  let cells=Array(offset).fill(null).concat(
+    Array.from({length:days},(_,i)=>i+1)
+  );
+
+  while(cells.length%7)cells.push(null);
+
+  return `
+    <div class="section-head">
+      <button class="secondary" onclick="moveMonth(-1)">← Anterior</button>
+      <h2>${monthCursor.toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}</h2>
+      <button class="secondary" onclick="moveMonth(1)">Próximo →</button>
+    </div>
+
+    ${colorLegend()}
+
+    <div class="month">
+      ${['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'].map(x=>
+        `<div class="muted" style="padding:5px;text-align:center">${x}</div>`
+      ).join('')}
+
+      ${cells.map(d=>{
+        if(!d)return '<div></div>';
+
+        const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+
+        const items=db.tasks.filter(t=>t.due===ds);
+
+        return `
+          <div class="day ${ds===today()?'today':''}">
+            <strong>${d}</strong>
+            ${items.map(t=>`
+              <span
+                class="daytask ${taskColorClass(t)}"
+                title="Ver detalhes: ${esc(t.title)} — ${dueState(t)?'Atrasada':esc(t.status)}"
+                role="button" tabindex="0"
+                onclick="openTaskDetails('${t.id}')"
+                onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTaskDetails('${t.id}')}" >
+                ${esc(t.title)}
+              </span>
+            `).join('')}
+          </div>
+        `;
+      }).join('')}
+    </div>
+
+    <p class="muted" style="font-size:12px">
+      As tarefas aparecem no dia definido como prazo.
+      As cores são atualizadas automaticamente conforme o status e o prazo.
+    </p>
+  `;
+}
+
+function moveMonth(n){
+  monthCursor.setMonth(monthCursor.getMonth()+n);
+  render();
+}
+
+/* PROJETOS */
+function projectsPage(){
+  return `
+    <div class="section-head">
+      <h2>Seus projetos</h2>
+      <button class="primary" onclick="$('projectModal').style.display='flex'">+ Novo projeto</button>
+    </div>
+
+    ${db.projects.length?`
+      <div class="grid">
+        ${db.projects.map(p=>`
+          <div class="card">
+            <div class="section-head">
+              <b>${esc(p.name)}</b>
+              <span class="pill">${esc(p.status)}</span>
+            </div>
+
+            <p class="muted">${esc(p.desc||'Sem descrição')}</p>
+
+            <div class="stat-sub">
+              ${db.tasks.filter(t=>t.project===p.id&&t.status==='Concluída').length}
+              /
+              ${db.tasks.filter(t=>t.project===p.id).length}
+              tarefas concluídas
+            </div>
+
+            <div class="task-meta">Prazo: ${dateBR(p.due)}</div>
+
+            <div style="margin-top:12px">
+              <button class="danger" onclick="deleteProject('${p.id}')">Excluir projeto</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `:'<div class="empty">Nenhum projeto cadastrado. Crie um projeto para agrupar tarefas.</div>'}
+  `;
+}
+
+$('projectForm').onsubmit=async e=>{
+  e.preventDefault();
+
+  const button=$('projectForm').querySelector('button.primary');
+  button.disabled=true;
+  button.textContent='Salvando...';
+
+  try{
+    const p={
+      id:uuid(),
+      name:$('pName').value.trim(),
+      desc:$('pDesc').value,
+      status:$('pStatus').value,
+      due:$('pDue').value
+    };
+
+    await saveProjectToCloud(p);
+
+    db.projects.unshift(p);
+    $('projectModal').style.display='none';
+    $('projectForm').reset();
+    render();
+
+  }catch(error){
+    alert('Não foi possível salvar o projeto: '+error.message);
+  }finally{
+    button.disabled=false;
+    button.textContent='Salvar projeto';
+  }
+};
+
+async function deleteProject(id){
+  if(!confirm('Excluir o projeto? As tarefas vinculadas ficarão sem projeto.'))return;
+
+  try{
+    const {error:taskError}=await supabaseClient.from('tasks')
+      .update({project_id:null}).eq('project_id',id);
+
+    if(taskError)throw taskError;
+
+    const {error}=await supabaseClient.from('projects').delete().eq('id',id);
+    if(error)throw error;
+
+    db.tasks.forEach(t=>{if(t.project===id)t.project=''});
+    db.projects=db.projects.filter(p=>p.id!==id);
+    render();
+
+  }catch(error){
+    alert('Não foi possível excluir o projeto: '+error.message);
+  }
+}
+
+/* RELATÓRIOS */
+function reportsPage(){
+  const s=stats(),cats={};
+
+  db.tasks.forEach(t=>{
+    const c=t.category||'Sem categoria';
+    cats[c]=(cats[c]||0)+1;
+  });
+
+  return `
+    <div class="grid">
+      ${card('Concluídas','Tarefas finalizadas',s.done)}
+      ${card('Em andamento','Em execução',s.progress)}
+      ${card('Alta prioridade','Tarefas de prioridade alta em aberto',s.high)}
+      ${card('Atrasadas','Prazo vencido',s.late)}
+    </div>
+
+    <div class="section card">
+      <h2>Tarefas por categoria</h2>
+
+      ${Object.keys(cats).length
+        ?Object.entries(cats).map(([k,v])=>`
+          <div style="margin-top:14px">
+            <div class="section-head">
+              <span>${esc(k)}</span>
+              <b>${v}</b>
+            </div>
+            <div class="progress">
+              <span style="width:${Math.round(v/Math.max(s.total,1)*100)}%"></span>
+            </div>
+          </div>
+        `).join('')
+        :'<p class="muted">Ainda não há dados para exibir.</p>'
+      }
+    </div>
+
+    <div class="section card">
+      <h2>Desempenho por período</h2>
+      <p class="muted" style="font-size:12px;margin:5px 0 12px">Tarefas finalizadas, agrupadas pela data de conclusão.</p>
+      ${['Dia','Semana','Mês'].map(period=>{
+        const done=db.tasks.filter(t=>t.completedAt);
+        const groups={};
+        done.forEach(t=>{
+          const d=new Date(t.completedAt);
+          if(Number.isNaN(d.getTime()))return;
+          let key;
+          if(period==='Dia')key=d.toLocaleDateString('pt-BR');
+          else if(period==='Mês')key=d.toLocaleDateString('pt-BR',{month:'short',year:'numeric'});
+          else {const start=new Date(d);start.setDate(d.getDate()-((d.getDay()+6)%7));key='Semana de '+start.toLocaleDateString('pt-BR');}
+          groups[key]=(groups[key]||0)+1;
+        });
+        const entries=Object.entries(groups).slice(-6);
+        const max=Math.max(1,...entries.map(x=>x[1]));
+        return `<div style="margin-top:15px"><b>${period}</b>${entries.length?`<div class="dashboard-bars">${entries.map(([k,v])=>`<div class="dashboard-bar-row"><span>${esc(k)}</span><div class="dashboard-bar-track"><div class="dashboard-bar-fill" style="width:${Math.round(v/max*100)}%"></div></div><b>${v}</b></div>`).join('')}</div>`:'<p class="muted" style="font-size:12px">Sem tarefas concluídas neste histórico.</p>'}</div>`;
+      }).join('')}
+    </div>
+
+    <div class="section card">
+      <h2>Resumo de status</h2>
+
+      <div class="tablewrap" style="margin-top:12px">
+        <table>
+          <tr><th>Status</th><th>Quantidade</th></tr>
+          ${['A fazer','Em andamento','Concluída','Arquivada'].map(st=>`
+            <tr>
+              <td>${st}</td>
+              <td>${db.tasks.filter(t=>t.status===st).length}</td>
+            </tr>
+          `).join('')}
+        </table>
+      </div>
+    </div>
+
+    <div class="section card">
+      <h2>Acompanhamento de execução</h2>
+      <p class="muted" style="margin:6px 0 14px">Os horários de início e finalização aparecem somente neste relatório.</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Tarefa</th><th>Status</th><th>Início</th><th>Finalização</th><th>Tempo decorrido</th></tr></thead>
+          <tbody>
+            ${db.tasks.length?[...db.tasks].sort((a,b)=>(b.completedAt||b.startedAt||'').localeCompare(a.completedAt||a.startedAt||'')).map(t=>`
+              <tr>
+                <td>${esc(t.title)}</td>
+                <td>${esc(t.status)}</td>
+                <td>${t.startedAt?dateTimeBR(t.startedAt):'Não iniciado'}</td>
+                <td>${t.completedAt?dateTimeBR(t.completedAt):'—'}</td>
+                <td>${t.startedAt&&(t.completedAt||t.status==='Em andamento')?elapsedBR(t.startedAt,t.completedAt||null):'—'}</td>
+              </tr>
+            `).join(''):'<tr><td colspan="5">Nenhuma tarefa cadastrada.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+/* CONFIGURAÇÕES E BACKUP */
+function configPage(){
+  return `
+    <div class="card">
+      <h2>Conta e segurança</h2>
+
+      <p class="muted">
+        Sua conta está conectada. Suas tarefas e projetos são armazenados
+        na nuvem e ficam associados ao seu usuário.
+      </p>
+
+      <p><b>Conta:</b> ${esc(currentUser?.email||'')}</p>
+      <p><b>Sincronização:</b> Supabase</p>
+
+      <div class="actions">
+        <button class="primary" onclick="exportData()">Baixar backup (JSON)</button>
+
+        <label class="secondary" style="display:inline-flex;align-items:center">
+          Restaurar backup
+          <input type="file" accept="application/json" style="display:none" onchange="importData(event)">
+        </label>
+      </div>
+
+      <p class="status-text">
+        Ao restaurar, os dados do arquivo serão adicionados à sua conta atual.
+      </p>
+    </div>
+
+    <div class="section card">
+      <h2>Sobre o sistema</h2>
+      <p class="muted">
+        Minha Rotina — versão conectada à nuvem.
+        Cada usuário acessa somente seus próprios dados,
+        conforme as regras de segurança do banco.
+      </p>
+    </div>
+
+    <div class="section">
+      <button class="danger" onclick="signOut()">Sair da conta</button>
+    </div>
+  `;
+}
+
+function exportData(){
+  const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+
+  a.href=URL.createObjectURL(blob);
+  a.download='minha-rotina-backup.json';
+  a.click();
+
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+
+async function importData(e){
+  const file=e.target.files[0];
+  if(!file)return;
+
+  try{
+    const data=JSON.parse(await file.text());
+
+    if(!Array.isArray(data.tasks)||!Array.isArray(data.projects)){
+      throw Error('Backup inválido');
+    }
+
+    if(!confirm(`O backup contém ${data.projects.length} projeto(s) e ${data.tasks.length} tarefa(s). Deseja adicioná-los à sua conta atual?`))return;
+
+    const projectMap={};
+
+    for(const old of data.projects){
+      const p={
+        id:uuid(),
+        name:String(old.name||'Projeto importado'),
+        desc:old.desc||'',
+        status:old.status||'Planejado',
+        due:old.due||''
+      };
+
+      await saveProjectToCloud(p);
+      projectMap[old.id]=p.id;
+      db.projects.unshift(p);
+    }
+
+    for(const old of data.tasks){
+      const status=statusFromDb(old.status||'A fazer');
+
+      const t={
+        id:uuid(),
+        title:String(old.title||'Tarefa importada'),
+        category:old.category||'',
+        project:projectMap[old.project]||'',
+        priority:priorityFromDb(old.priority||'Média'),
+        status,
+        start:old.start||'',
+        due:old.due||'',
+        repeat:old.repeat||'Nenhuma',
+        notes:old.notes||'',
+        created:new Date().toISOString(),
+        startedAt:old.startedAt||old.started_at||(status==='Em andamento'||status==='Concluída'?new Date().toISOString():''),
+        completedAt:old.completedAt||old.completed_at||(status==='Concluída'?new Date().toISOString():'')
+      };
+
+      await saveTaskToCloud(t);
+      db.tasks.unshift(t);
+    }
+
+    render();
+    alert('Backup importado com sucesso!');
+
+  }catch(error){
+    alert('Não foi possível importar o backup: '+error.message);
+  }finally{
+    e.target.value='';
+  }
+}
+
+/* ADMINISTRAÇÃO */
+async function adminRequest(body){
+  const {data:{session}}=await supabaseClient.auth.getSession();
+
+  if(!session)throw Error('Sua sessão expirou. Entre novamente.');
+
+  const {data,error}=await supabaseClient.functions.invoke('admin-users',{body});
+
+  if(error)throw error;
+  if(data?.error)throw Error(data.error);
+
+  return data;
+}
+
+function adminPage(){
+  return `
+    <div class="card">
+      <div class="section-head">
+        <h2>Gerenciamento de usuários</h2>
+        <button class="primary" onclick="loadAdminUsers()">Atualizar lista</button>
+      </div>
+
+      <p class="muted">
+        Área restrita ao administrador. Você pode consultar contas,
+        bloquear ou desbloquear acessos e solicitar redefinição de senha por e-mail.
+      </p>
+
+      <div id="adminUsers" class="list">
+        <div class="empty">Carregue a lista de usuários.</div>
+      </div>
+    </div>
+  `;
+}
+
+async function loadAdminUsers(){
+  const target=$('adminUsers');
+  if(!target)return;
+
+  target.innerHTML='<div class="empty">Carregando usuários...</div>';
+
+  try{
+    const data=await adminRequest({action:'list'});
+    const users=data.users||[];
+
+    target.innerHTML=users.length?users.map(u=>{
+      const blocked=u.banned_until&&new Date(u.banned_until)>new Date();
+      const self=u.id===currentUser.id;
+
+      return `
+        <div class="admin-user">
+          <div class="admin-user-info">
+            <b>${esc(u.email||'Sem e-mail')}</b>
+            <div class="task-meta">Cadastro: ${u.created_at?new Date(u.created_at).toLocaleDateString('pt-BR'):'-'}</div>
+            <div class="task-meta">Último acesso: ${u.last_sign_in_at?new Date(u.last_sign_in_at).toLocaleString('pt-BR'):'Ainda não entrou'}</div>
+            <div class="task-meta">E-mail confirmado: ${u.email_confirmed_at?'Sim':'Não'} · ${blocked?'Bloqueado':'Ativo'}</div>
+          </div>
+
+          <div class="admin-user-actions">
+            ${self?'<span class="pill">Sua conta</span>':`
+              <button class="secondary" onclick="resetUserPassword('${esc(u.email||'')}')">Redefinir senha</button>
+
+              ${blocked
+                ?`<button class="primary" onclick="changeUserBlock('${u.id}','unblock')">Desbloquear</button>`
+                :`<button class="danger" onclick="changeUserBlock('${u.id}','block')">Bloquear</button>`
+              }
+            `}
+          </div>
+        </div>
+      `;
+    }).join(''):'<div class="empty">Nenhum usuário encontrado.</div>';
+
+  }catch(error){
+    target.innerHTML=`<div class="notice">Não foi possível carregar usuários: ${esc(error.message)}</div>`;
+  }
+}
+
+async function changeUserBlock(userId,action){
+  const label=action==='block'?'bloquear':'desbloquear';
+
+  if(!confirm(`Deseja ${label} este usuário?`))return;
+
+  try{
+    await adminRequest({action,user_id:userId});
+
+    alert(action==='block'?'Usuário bloqueado.':'Usuário desbloqueado.');
+    await loadAdminUsers();
+
+  }catch(error){
+    alert('Não foi possível alterar o acesso: '+error.message);
+  }
+}
+
+async function resetUserPassword(email){
+  if(!email)return;
+
+  if(!confirm(`Enviar um e-mail de recuperação de senha para ${email}?`))return;
+
+  try{
+    await adminRequest({action:'reset_password',email});
+    alert('Solicitação enviada. O usuário deverá verificar o e-mail.');
+
+  }catch(error){
+    alert('Não foi possível solicitar a recuperação: '+error.message);
+  }
+}
+
+/* NAVEGAÇÃO */
+function go(p){
+  if(p==='admin'&&!isAdmin)return;
+
+  page=p;
+
+  document.querySelectorAll('.nav button').forEach(b=>
+    b.classList.toggle('active',b.dataset.page===p)
+  );
+
+  render();
+
+  if(p==='admin')loadAdminUsers();
+}
+
+function render(){
+  const titles={
+    inicio:'Visão geral',
+    tarefas:'Minhas tarefas',
+    calendario:'Calendário',
+    projetos:'Projetos',
+    relatorios:'Relatórios',
+    config:'Configurações',
+    admin:'Administração'
+  };
+
+  const pages={
+    inicio:dashboard,
+    tarefas:taskPage,
+    calendario:calendarPage,
+    projetos:projectsPage,
+    relatorios:reportsPage,
+    config:configPage,
+    admin:adminPage
+  };
+
+  $('pageTitle').textContent=titles[page]||'Minha Rotina';
+  $('content').innerHTML=(pages[page]||dashboard)();
+}
+
+document.querySelectorAll('.nav button').forEach(b=>{
+  b.onclick=()=>go(b.dataset.page);
+});
+
+
+/* PAINEL DE DETALHES ARRASTÁVEL */
+function enableTaskDetailsDrag(){
+  const modal=document.querySelector('#taskDetailsModal .task-details-modal');
+  const handle=document.querySelector('#taskDetailsModal .task-details-top');
+  if(!modal||!handle||handle.dataset.dragReady==='1')return;
+  handle.dataset.dragReady='1';
+  let dragging=false,startX=0,startY=0,baseX=0,baseY=0;
+  handle.addEventListener('pointerdown',e=>{
+    if(e.target.closest('button'))return;
+    dragging=true;startX=e.clientX;startY=e.clientY;
+    baseX=0;baseY=0;
+    handle.setPointerCapture(e.pointerId);
+  });
+  handle.addEventListener('pointermove',e=>{
+    if(!dragging)return;
+    const dx=e.clientX-startX,dy=e.clientY-startY;
+    const maxX=Math.max(0,(window.innerWidth-modal.offsetWidth)/2-8);
+    const maxY=Math.max(0,(window.innerHeight-modal.offsetHeight)/2-8);
+    modal.style.transform=`translate(${Math.max(-maxX,Math.min(maxX,baseX+dx))}px,${Math.max(-maxY,Math.min(maxY,baseY+dy))}px)`;
+  });
+  const stop=()=>{dragging=false};
+  handle.addEventListener('pointerup',stop);
+  handle.addEventListener('pointercancel',stop);
+}
+
+/* INICIALIZAÇÃO */
+async function initialize(){
+  if(!supabaseClient)return;
+
+  const {data,error}=await supabaseClient.auth.getSession();
+
+  if(error){
+    showMessage('Erro ao verificar sessão: '+error.message,true);
+    return;
+  }
+
+  await handleSession(data.session);
+}
+
+initialize();
+</script>
+</body>
+</html>
