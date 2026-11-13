@@ -238,6 +238,21 @@ th{color:var(--muted);font-weight:650;background:#fafbfc}
 .progress{height:9px;background:#edf0f5;border-radius:99px;overflow:hidden}
 .progress span{display:block;height:100%;background:var(--green)}
 .status-text{font-size:12px;color:var(--muted);margin-top:8px}
+.dashboard-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;margin-top:18px}
+.dashboard-bars{display:grid;gap:11px;margin-top:14px}
+.dashboard-bar-row{display:grid;grid-template-columns:minmax(78px,110px) 1fr 34px;gap:10px;align-items:center;font-size:13px}
+.dashboard-bar-track{height:11px;border-radius:99px;background:#edf0f5;overflow:hidden}
+.dashboard-bar-fill{height:100%;border-radius:99px;background:#315efb;min-width:0}
+.priority-breakdown{display:grid;gap:10px;margin-top:14px}
+.priority-line{display:grid;grid-template-columns:70px 1fr 28px;gap:9px;align-items:center;font-size:13px}
+.project-progress-list{display:grid;gap:14px;margin-top:14px}
+.project-progress-item{display:grid;gap:6px}
+.project-progress-heading{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+.activity-list{display:grid;gap:9px;margin-top:12px}
+.activity-item{padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:13px}
+.task-details-top{cursor:move;touch-action:none;user-select:none}
+@media(max-width:850px){.dashboard-grid{grid-template-columns:1fr}}
+@media(max-width:560px){.dashboard-bar-row{grid-template-columns:72px 1fr 28px;gap:7px}.dashboard-grid{gap:10px}}
 .admin-user{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:13px;background:white;border:1px solid var(--line);border-radius:10px}
 .admin-user-info{min-width:180px;flex:1}
 .admin-user-actions{display:flex;gap:7px;flex-wrap:wrap}
@@ -554,7 +569,7 @@ function esc(s=''){
 function dateBR(d){
   if(!d)return 'Sem prazo';
   const raw=String(d);
-  const dateOnly=/^\\d{4}-\\d{2}-\\d{2}$/.test(raw);
+  const dateOnly=/^\d{4}-\d{2}-\d{2}$/.test(raw);
   const parsed=dateOnly?new Date(raw+'T12:00:00'):new Date(raw);
   return Number.isNaN(parsed.getTime())?'Não definida':parsed.toLocaleDateString('pt-BR');
 }
@@ -794,6 +809,14 @@ function projectName(id){
   return db.projects.find(p=>p.id===id)?.name||'';
 }
 
+function priorityRank(priority){
+  return priority==='Alta'?0:priority==='Média'?1:2;
+}
+function sortTasksByPriority(tasks){
+  return [...tasks].sort((a,b)=>priorityRank(a.priority)-priorityRank(b.priority)||
+    (a.due||'9999-12-31').localeCompare(b.due||'9999-12-31'));
+}
+
 /* LINHA DA TAREFA */
 function taskRow(t){
   const late=dueState(t);
@@ -897,8 +920,11 @@ function openTaskDetails(id){
       </div>
     </footer>`;
   $('taskDetailsModal').style.display='flex';
+  enableTaskDetailsDrag();
 }
 function closeTaskDetails(){
+  const modal=document.querySelector('#taskDetailsModal .task-details-modal');
+  if(modal)modal.style.transform='';
   $('taskDetailsModal').style.display='none';
 }
 
@@ -1036,48 +1062,87 @@ function card(label,note,num){
 
 function dashboard(){
   const s=stats();
-
-  const up=db.tasks
-    .filter(t=>!['Concluída','Arquivada'].includes(t.status))
-    .sort((a,b)=>(a.due||'9999').localeCompare(b.due||'9999'))
-    .slice(0,6);
-
+  const active=db.tasks.filter(t=>!['Concluída','Arquivada'].includes(t.status));
+  const up=sortTasksByPriority(active).sort((a,b)=>{
+    const priority=priorityRank(a.priority)-priorityRank(b.priority);
+    return priority||((a.due||'9999-12-31').localeCompare(b.due||'9999-12-31'));
+  }).slice(0,6);
   const pct=s.total?Math.round(s.done/s.total*100):0;
+  const priorityCounts=[
+    {name:'Alta',count:active.filter(t=>t.priority==='Alta').length,color:'#d94b4b'},
+    {name:'Média',count:active.filter(t=>t.priority==='Média').length,color:'#d6a52b'},
+    {name:'Baixa',count:active.filter(t=>t.priority==='Baixa').length,color:'#3983df'}
+  ];
+  const periodCounts=[
+    {name:'A fazer',count:db.tasks.filter(t=>t.status==='A fazer').length},
+    {name:'Em andamento',count:s.progress},
+    {name:'Concluídas',count:s.done},
+    {name:'Atrasadas',count:s.late}
+  ];
+  const maxPeriod=Math.max(1,...periodCounts.map(x=>x.count));
+  const projects=db.projects.map(p=>{
+    const tasks=db.tasks.filter(t=>t.project===p.id);
+    const done=tasks.filter(t=>t.status==='Concluída').length;
+    return {...p,total:tasks.length,done,pct:tasks.length?Math.round(done/tasks.length*100):0};
+  }).sort((a,b)=>a.name.localeCompare(b.name));
+  const upcoming=[...active].filter(t=>t.due).sort((a,b)=>a.due.localeCompare(b.due)).slice(0,5);
+  const recent=[...db.tasks].filter(t=>t.completedAt||t.startedAt||t.created)
+    .sort((a,b)=>(b.completedAt||b.startedAt||b.created||'').localeCompare(a.completedAt||a.startedAt||a.created||''))
+    .slice(0,5);
 
   return `
     ${s.late?`<div class="notice">Você tem <b>${s.late}</b> tarefa(s) com prazo vencido. Revise sua lista para reorganizar as prioridades.</div>`:''}
-
     <div class="grid">
       ${card('Total de tarefas','Cadastradas',s.total)}
-      ${card('Em aberto','A fazer ou em andamento',s.open)}
+      ${card('Pendentes','Aguardando início',db.tasks.filter(t=>t.status==='A fazer').length)}
+      ${card('Em andamento','Em execução',s.progress)}
       ${card('Concluídas','Finalizadas',s.done)}
       ${card('Atrasadas','Precisam de atenção',s.late)}
+      ${card('Projetos','Cadastrados',db.projects.length)}
     </div>
 
     <div class="section card">
-      <div class="section-head">
-        <h2>Progresso geral</h2>
-        <b>${pct}%</b>
-      </div>
+      <div class="section-head"><h2>Progresso geral</h2><b>${pct}%</b></div>
       <div class="progress"><span style="width:${pct}%"></span></div>
-      <p class="muted" style="font-size:12px">
-        ${s.done} de ${s.total} tarefas concluídas.
-      </p>
+      <p class="muted" style="font-size:12px">${s.done} de ${s.total} tarefas concluídas.</p>
     </div>
 
-    <div class="section">
-      <div class="section-head">
-        <h2>Próximas tarefas</h2>
-        <button class="secondary" onclick="go('tarefas')">Ver todas</button>
+    <div class="dashboard-grid">
+      <div class="card">
+        <h2>Visão de produtividade</h2>
+        <p class="muted" style="font-size:12px;margin:4px 0 0">Distribuição das tarefas por situação atual.</p>
+        <div class="dashboard-bars">
+          ${periodCounts.map(x=>`<div class="dashboard-bar-row"><span>${x.name}</span><div class="dashboard-bar-track"><div class="dashboard-bar-fill" style="width:${Math.round(x.count/maxPeriod*100)}%"></div></div><b>${x.count}</b></div>`).join('')}
+        </div>
       </div>
+      <div class="card">
+        <h2>Prioridades em aberto</h2>
+        <div class="priority-breakdown">
+          ${priorityCounts.map(x=>`<div class="priority-line"><span>${x.name}</span><div class="dashboard-bar-track"><div class="dashboard-bar-fill" style="width:${active.length?Math.round(x.count/active.length*100):0}%;background:${x.color}"></div></div><b>${x.count}</b></div>`).join('')}
+        </div>
+      </div>
+    </div>
 
-      ${colorLegend()}
+    <div class="dashboard-grid">
+      <div class="card">
+        <h2>Acompanhamento dos projetos</h2>
+        ${projects.length?`<div class="project-progress-list">${projects.map(p=>`<div class="project-progress-item"><div class="project-progress-heading"><b>${esc(p.name)}</b><span>${p.done}/${p.total} · ${p.pct}%</span></div><div class="progress"><span style="width:${p.pct}%"></span></div><div class="muted" style="font-size:12px">${p.total-p.done} atividade(s) em aberto</div></div>`).join('')}</div>`:'<p class="muted">Nenhum projeto cadastrado.</p>'}
+      </div>
+      <div class="card">
+        <h2>Próximos prazos</h2>
+        ${upcoming.length?`<div class="activity-list">${upcoming.map(t=>`<div class="activity-item"><b>${esc(t.title)}</b><div class="muted">${dateBR(t.due)} · ${esc(t.priority)}${dueState(t)?' · Atrasada':''}</div></div>`).join('')}</div>`:'<p class="muted">Nenhum prazo próximo cadastrado.</p>'}
+      </div>
+    </div>
 
-      <div class="list">
-        ${up.length
-          ?up.map(taskRow).join('')
-          :'<div class="empty">Nenhuma tarefa pendente. Adicione sua primeira tarefa!</div>'
-        }
+    <div class="dashboard-grid">
+      <div class="card">
+        <div class="section-head"><h2>Tarefas prioritárias</h2><button class="secondary" onclick="go('tarefas')">Ver todas</button></div>
+        ${colorLegend()}
+        <div class="list">${up.length?up.map(taskRow).join(''):'<div class="empty">Nenhuma tarefa pendente. Adicione sua primeira tarefa!</div>'}</div>
+      </div>
+      <div class="card">
+        <h2>Atividade recente</h2>
+        ${recent.length?`<div class="activity-list">${recent.map(t=>`<div class="activity-item"><b>${esc(t.title)}</b><div class="muted">${esc(t.status)} · ${t.completedAt?'Finalizada em '+dateTimeBR(t.completedAt):t.startedAt?'Iniciada em '+dateTimeBR(t.startedAt):'Criada em '+dateTimeBR(t.created)}</div></div>`).join('')}</div>`:'<p class="muted">Ainda não há atividades registradas.</p>'}
       </div>
     </div>
   `;
@@ -1109,7 +1174,7 @@ function taskPage(){
 
     <div class="list" id="taskList">
       ${db.tasks.length
-        ?db.tasks.map(taskRow).join('')
+        ?sortTasksByPriority(db.tasks).map(taskRow).join('')
         :'<div class="empty">Sua lista está vazia. Clique em “Nova tarefa” para começar.</div>'
       }
     </div>
@@ -1121,11 +1186,11 @@ function filterTasks(){
   const st=$('filterStatus').value;
   const pr=$('filterPriority').value;
 
-  const arr=db.tasks.filter(t=>
+  const arr=sortTasksByPriority(db.tasks.filter(t=>
     (t.title+' '+t.category+' '+t.notes).toLowerCase().includes(q)&&
     (!st||t.status===st)&&
     (!pr||t.priority===pr)
-  );
+  ));
 
   $('taskList').innerHTML=arr.length
     ?arr.map(taskRow).join('')
@@ -1324,6 +1389,27 @@ function reportsPage(){
     </div>
 
     <div class="section card">
+      <h2>Desempenho por período</h2>
+      <p class="muted" style="font-size:12px;margin:5px 0 12px">Tarefas finalizadas, agrupadas pela data de conclusão.</p>
+      ${['Dia','Semana','Mês'].map(period=>{
+        const done=db.tasks.filter(t=>t.completedAt);
+        const groups={};
+        done.forEach(t=>{
+          const d=new Date(t.completedAt);
+          if(Number.isNaN(d.getTime()))return;
+          let key;
+          if(period==='Dia')key=d.toLocaleDateString('pt-BR');
+          else if(period==='Mês')key=d.toLocaleDateString('pt-BR',{month:'short',year:'numeric'});
+          else {const start=new Date(d);start.setDate(d.getDate()-((d.getDay()+6)%7));key='Semana de '+start.toLocaleDateString('pt-BR');}
+          groups[key]=(groups[key]||0)+1;
+        });
+        const entries=Object.entries(groups).slice(-6);
+        const max=Math.max(1,...entries.map(x=>x[1]));
+        return `<div style="margin-top:15px"><b>${period}</b>${entries.length?`<div class="dashboard-bars">${entries.map(([k,v])=>`<div class="dashboard-bar-row"><span>${esc(k)}</span><div class="dashboard-bar-track"><div class="dashboard-bar-fill" style="width:${Math.round(v/max*100)}%"></div></div><b>${v}</b></div>`).join('')}</div>`:'<p class="muted" style="font-size:12px">Sem tarefas concluídas neste histórico.</p>'}</div>`;
+      }).join('')}
+    </div>
+
+    <div class="section card">
       <h2>Resumo de status</h2>
 
       <div class="tablewrap" style="margin-top:12px">
@@ -1346,7 +1432,7 @@ function reportsPage(){
         <table>
           <thead><tr><th>Tarefa</th><th>Status</th><th>Início</th><th>Finalização</th><th>Tempo decorrido</th></tr></thead>
           <tbody>
-            ${db.tasks.length?db.tasks.map(t=>`
+            ${db.tasks.length?[...db.tasks].sort((a,b)=>(b.completedAt||b.startedAt||'').localeCompare(a.completedAt||a.startedAt||'')).map(t=>`
               <tr>
                 <td>${esc(t.title)}</td>
                 <td>${esc(t.status)}</td>
@@ -1627,6 +1713,32 @@ function render(){
 document.querySelectorAll('.nav button').forEach(b=>{
   b.onclick=()=>go(b.dataset.page);
 });
+
+
+/* PAINEL DE DETALHES ARRASTÁVEL */
+function enableTaskDetailsDrag(){
+  const modal=document.querySelector('#taskDetailsModal .task-details-modal');
+  const handle=document.querySelector('#taskDetailsModal .task-details-top');
+  if(!modal||!handle||handle.dataset.dragReady==='1')return;
+  handle.dataset.dragReady='1';
+  let dragging=false,startX=0,startY=0,baseX=0,baseY=0;
+  handle.addEventListener('pointerdown',e=>{
+    if(e.target.closest('button'))return;
+    dragging=true;startX=e.clientX;startY=e.clientY;
+    baseX=0;baseY=0;
+    handle.setPointerCapture(e.pointerId);
+  });
+  handle.addEventListener('pointermove',e=>{
+    if(!dragging)return;
+    const dx=e.clientX-startX,dy=e.clientY-startY;
+    const maxX=Math.max(0,(window.innerWidth-modal.offsetWidth)/2-8);
+    const maxY=Math.max(0,(window.innerHeight-modal.offsetHeight)/2-8);
+    modal.style.transform=`translate(${Math.max(-maxX,Math.min(maxX,baseX+dx))}px,${Math.max(-maxY,Math.min(maxY,baseY+dy))}px)`;
+  });
+  const stop=()=>{dragging=false};
+  handle.addEventListener('pointerup',stop);
+  handle.addEventListener('pointercancel',stop);
+}
 
 /* INICIALIZAÇÃO */
 async function initialize(){
